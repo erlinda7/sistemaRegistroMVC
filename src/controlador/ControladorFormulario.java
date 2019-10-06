@@ -23,7 +23,8 @@ public class ControladorFormulario implements ActionListener{
         formulario.setLocationRelativeTo(null);
         formulario.setVisible(true);
         
-        personaDAO.iniciarPersona();
+        bloquearUsuario();
+        personaDAO.mostrarUsuario("");
         
         
         //evento
@@ -45,19 +46,21 @@ public class ControladorFormulario implements ActionListener{
     public void actionPerformed(ActionEvent e) {
        if(formulario.btnNuevo==e.getSource()){
            try {
-               personaDAO.nuevoUsuario();
+               nuevoUsuario();
            } catch (Exception ex) {
                JOptionPane.showMessageDialog(null, "no se pudo crear nuevo usuario");
            }
        }else if(formulario.btnCancelar==e.getSource()){
            try {
-               personaDAO.bloquearUsuario();
+               bloquearUsuario();
            } catch (Exception ex) {
                  JOptionPane.showMessageDialog(null, "no se pudo crear nuevo usuario");
            }
        }else if(formulario.btnRegistrar==e.getSource()){
            try {
                personaDAO.insertarUsuario();
+               limpiarTabla(formulario.tabla);
+               personaDAO.mostrarUsuario("");
            } catch (Exception ex) {
                  JOptionPane.showMessageDialog(null, "no se pudo insertar de usuario");
            }
@@ -81,20 +84,27 @@ public class ControladorFormulario implements ActionListener{
        }
        else if(formulario.btnModificar==e.getSource()){
            try {
-               personaDAO.modificarUsuario();
+               nuevoUsuario(); //que desbloquear para modificar los texfields
+               modificarUsuario();
            } catch (Exception ex) {
                  JOptionPane.showMessageDialog(null, "no se pudo modificar usuario");
            }
        }else if(formulario.BtnActualizar==e.getSource()){
            try {
                personaDAO.actualizarUsuario();
+               limpiarTabla(formulario.tabla);
+               personaDAO.mostrarUsuario("");
+               bloquearUsuario();
            } catch (Exception ex) {
                  JOptionPane.showMessageDialog(null, "no se pudo actualizar usuario");
            }
        }
        else if(formulario.btnEliminar==e.getSource()){
            try {
+                nuevoUsuario(); //que desbloquear para modificar los texfields
                personaDAO.eliminarUsuario();
+               limpiarTabla(formulario.tabla);
+               personaDAO.mostrarUsuario("");
            } catch (Exception ex) {
                  JOptionPane.showMessageDialog(null, "no se pudo eliminar usuario");
            }
@@ -116,5 +126,58 @@ public class ControladorFormulario implements ActionListener{
             JOptionPane.showMessageDialog(null, "Error al limpiar la tabla.");
         }
     }
-    
+   
+   //----------------------
+    public void nuevoUsuario() {
+        limpiarUsuario();
+
+        formulario.txtNombre.setEnabled(true); //para deshabilitar 
+        formulario.txtApellido.setEnabled(true);
+        formulario.txtTelefono.setEnabled(true);
+        formulario.txtDomicilio.setEnabled(true);
+        formulario.txtEdad.setEnabled(true);
+        formulario.btnCancelar.setEnabled(true);
+        formulario.btnRegistrar.setEnabled(true);
+        formulario.BtnActualizar.setEnabled(false);
+    }
+
+    public void bloquearUsuario() {
+        formulario.txtNombre.setEnabled(false); //para deshabilitar 
+        formulario.txtApellido.setEnabled(false);
+        formulario.txtTelefono.setEnabled(false);
+        formulario.txtDomicilio.setEnabled(false);
+        formulario.txtEdad.setEnabled(false);
+        formulario.btnCancelar.setEnabled(false);
+        formulario.btnRegistrar.setEnabled(false);
+        formulario.BtnActualizar.setEnabled(false);
+
+        limpiarUsuario();
+    }
+
+    public void limpiarUsuario() {
+        formulario.txtNombre.setText(""); //para deshabilitar 
+        formulario.txtApellido.setText("");
+        formulario.txtTelefono.setText("");
+        formulario.txtDomicilio.setText("");
+        formulario.txtEdad.setText("");
+        formulario.txtBuscar.setText("");
+    }
+        public void modificarUsuario() { //para recargar el formulario para modificar
+        
+        formulario.btnRegistrar.setEnabled(false);
+        formulario.BtnActualizar.setEnabled(true);
+
+        int fila = formulario.tabla.getSelectedRow(); //fila seleccionada
+        if (fila >= 0) {
+            formulario.txtBuscar.setText(formulario.tabla.getValueAt(fila, 0).toString());
+            formulario.txtNombre.setText(formulario.tabla.getValueAt(fila, 1).toString());
+            formulario.txtApellido.setText(formulario.tabla.getValueAt(fila, 2).toString());
+            formulario.txtTelefono.setText(formulario.tabla.getValueAt(fila, 3).toString());
+            formulario.txtDomicilio.setText(formulario.tabla.getValueAt(fila, 4).toString());
+            formulario.txtEdad.setText(formulario.tabla.getValueAt(fila, 5).toString());
+
+        } else {
+            JOptionPane.showMessageDialog(formulario, "No se ha seleccionado una fila");
+        }
+    }
 }

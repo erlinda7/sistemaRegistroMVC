@@ -18,16 +18,15 @@ public class PersonaDAO {
     Formulario form;
     ConexionBBDD conectaBBDD = new ConexionBBDD();
     Connection miConexion;
+    
+    PreparedStatement ps;
 
     public PersonaDAO(Formulario form) {
         this.form = form;
         miConexion = conectaBBDD.Conexion();
+         
     }
 
-    public void iniciarPersona() {
-        bloquearUsuario();
-        mostrarUsuario("");//se ejecuta cuando inicia el programa
-    }
 
     public void insertarUsuario() {
         try {
@@ -41,14 +40,14 @@ public class PersonaDAO {
 
                 String consultaInsertar = "INSERT INTO USUARIOS(NOMBRE,APELLIDO,TELEFONO,DOMICILIO,EDAD)"
                         + " VALUES(?,?,?,?,?)";
-                PreparedStatement prepStamentInsertar = miConexion.prepareStatement(consultaInsertar);
+                ps = miConexion.prepareStatement(consultaInsertar);
 
-                prepStamentInsertar.setString(1, nombre);
-                prepStamentInsertar.setString(2, apellido);
-                prepStamentInsertar.setString(3, telefono);
-                prepStamentInsertar.setString(4, domicilio);
-                prepStamentInsertar.setInt(5, Integer.parseInt(edad));
-                prepStamentInsertar.executeUpdate();
+                ps.setString(1, nombre);
+                ps.setString(2, apellido);
+                ps.setString(3, telefono);
+                ps.setString(4, domicilio);
+                ps.setInt(5, Integer.parseInt(edad));
+                ps.executeUpdate();
                 JOptionPane.showMessageDialog(form, "insercion Exitosa");
             } else {
                 JOptionPane.showMessageDialog(form, "Error , hay campos vacios");
@@ -60,8 +59,6 @@ public class PersonaDAO {
     }
 
     public void mostrarUsuario(String atributo) {
-        
-
         String consultaUsuarios;
         if (atributo.equals("")) {
             consultaUsuarios = "SELECT * FROM USUARIOS";
@@ -112,28 +109,6 @@ public class PersonaDAO {
 
     }
 
-
-        
-        
-    public void modificarUsuario() { //para recargar el formulario para modificar
-        nuevoUsuario(); //que desbloquear para modificar los texfields
-        form.btnRegistrar.setEnabled(false);
-        form.BtnActualizar.setEnabled(true);
-
-        int fila = form.tabla.getSelectedRow(); //fila seleccionada
-        if (fila >= 0) {
-            form.txtBuscar.setText(form.tabla.getValueAt(fila, 0).toString());
-            form.txtNombre.setText(form.tabla.getValueAt(fila, 1).toString());
-            form.txtApellido.setText(form.tabla.getValueAt(fila, 2).toString());
-            form.txtTelefono.setText(form.tabla.getValueAt(fila, 3).toString());
-            form.txtDomicilio.setText(form.tabla.getValueAt(fila, 4).toString());
-            form.txtEdad.setText(form.tabla.getValueAt(fila, 5).toString());
-
-        } else {
-            JOptionPane.showMessageDialog(form, "No se ha seleccionado una fila");
-        }
-    }
-
     public void actualizarUsuario() {
         try {
             String id = form.txtBuscar.getText();
@@ -144,20 +119,19 @@ public class PersonaDAO {
             String edad = form.txtEdad.getText();
 
             if (!nombre.equals("") && !apellido.equals("") && !telefono.equals("") && !domicilio.equals("") && !edad.equals("")) {
-                String consultaActulizar = "UPDATE USUARIOS SET "
-                        + "NOMBRE='" + nombre + "',"
-                        + "APELLIDO='" + apellido + "',"
-                        + "TELEFONO='" + telefono + "',"
-                        + "DOMICILIO='" + domicilio + "',"
-                        + "EDAD='" + Integer.parseInt(edad) + "'"
-                        + " WHERE ID='" + Integer.parseInt(id) + "'";
-                System.out.println(Integer.parseInt(id));
-                PreparedStatement prepStatementActualiza = miConexion.prepareStatement(consultaActulizar);
-                prepStatementActualiza.executeUpdate();
+                String consultaActulizar = "UPDATE USUARIOS SET NOMBRE=?, APELLIDO=?, TELEFONO=?, DOMICILIO=?, EDAD=? WHERE ID=?";
+                ps= miConexion.prepareStatement(consultaActulizar);
+                ps.setString(1, nombre);
+                ps.setString(2, apellido);
+                ps.setString(3, telefono);
+                ps.setString(4, domicilio);
+                ps.setInt(5, Integer.parseInt(edad));
+                ps.setInt(6, Integer.parseInt(id));
+                ps.executeUpdate();
 
                 JOptionPane.showMessageDialog(form, "Usuario modificado");
                 mostrarUsuario("");
-                bloquearUsuario();
+                
             } else {
                 JOptionPane.showMessageDialog(form, "Error , hay campos vacios");
             }
@@ -168,7 +142,7 @@ public class PersonaDAO {
     }
 
     public void eliminarUsuario() {
-        nuevoUsuario(); //que desbloquear para modificar los texfields
+       
         form.btnRegistrar.setEnabled(false);
         form.BtnActualizar.setEnabled(true);
 
@@ -177,9 +151,10 @@ public class PersonaDAO {
             String id = form.tabla.getValueAt(fila, 0).toString();
             try {
 
-                String consultaEliminar = "DELETE FROM USUARIOS WHERE ID='" + id + "'";
-                PreparedStatement prepStamentEliminar = miConexion.prepareStatement(consultaEliminar);
-                prepStamentEliminar.execute();
+                String consultaEliminar = "DELETE FROM USUARIOS WHERE ID=?";
+                ps= miConexion.prepareStatement(consultaEliminar);
+                ps.setInt(1, Integer.parseInt(id));
+                ps.execute();
                 JOptionPane.showMessageDialog(null, "usuario eliminado");
                 mostrarUsuario("");
             } catch (SQLException ex) {
@@ -188,46 +163,5 @@ public class PersonaDAO {
         } else {
             JOptionPane.showMessageDialog(form, "No se ha seleccionado una fila");
         }
-    }
-
-//----------------------
-    public void nuevoUsuario() {
-        limpiarUsuario();
-
-        form.txtNombre.setEnabled(true); //para deshabilitar 
-        form.txtApellido.setEnabled(true);
-        form.txtTelefono.setEnabled(true);
-        form.txtDomicilio.setEnabled(true);
-        form.txtEdad.setEnabled(true);
-        form.btnCancelar.setEnabled(true);
-        form.btnRegistrar.setEnabled(true);
-        form.BtnActualizar.setEnabled(false);
-    }
-
-    public void bloquearUsuario() {
-        form.txtNombre.setEnabled(false); //para deshabilitar 
-        form.txtApellido.setEnabled(false);
-        form.txtTelefono.setEnabled(false);
-        form.txtDomicilio.setEnabled(false);
-        form.txtEdad.setEnabled(false);
-        form.btnCancelar.setEnabled(false);
-        form.btnRegistrar.setEnabled(false);
-        form.BtnActualizar.setEnabled(false);
-
-        limpiarUsuario();
-    }
-
-    public void limpiarUsuario() {
-        form.txtNombre.setText(""); //para deshabilitar 
-        form.txtApellido.setText("");
-        form.txtTelefono.setText("");
-        form.txtDomicilio.setText("");
-        form.txtEdad.setText("");
-        form.txtBuscar.setText("");
-    }
-    
-    
-    
-    
-    
+    }  
 }
